@@ -9,12 +9,11 @@
 #include <bits/types/FILE.h>
 
 struct INode{
-    uint nLinks;
     uint size;
     uint blocks[10];
-    uint singleIndirectBlock;
-    uint doubleIndirectBlock;
-    uint tripleIndirectBlock;
+    uint single_indirect_block;
+    uint double_indirect_block;
+    uint triple_indirect_block;
 };
 
 void setGap(uint);
