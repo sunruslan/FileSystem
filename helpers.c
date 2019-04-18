@@ -7,7 +7,7 @@
 
 bool file_exist(char* path) {
     struct stat buffer;
-    int exist = stat(path,&buffer);
+    int exist = stat(path, &buffer);
     if(exist == 0)
         return true;
     else

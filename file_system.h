@@ -5,7 +5,13 @@
 #ifndef FILESYSTEM_FILE_SYSTEM_H
 #define FILESYSTEM_FILE_SYSTEM_H
 
+#include <string.h>
 #include <stdbool.h>
+
+#include "inode.h"
+
+#define MAX_FILE_NAME_LENGTH 2048
+
 
 void create_file_system(char* path, int size);
 
@@ -26,5 +32,6 @@ bool write(char* path, const char* content);
 bool ls(char* path, char** result);
 
 bool dispose();
+
 
 #endif //FILESYSTEM_FILE_SYSTEM_H

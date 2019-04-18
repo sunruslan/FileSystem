@@ -8,7 +8,7 @@
 #include "file_system.h"
 
 struct File{
-    int inode_number;
+    int inode_index;
     char* name[MAX_FILE_NAME_LENGTH];
 };
 

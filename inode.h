@@ -8,14 +8,7 @@
 #include <sys/types.h>
 #include <bits/types/FILE.h>
 
-enum Mode{
-    File,
-    Directory,
-    Empty
-};
-
 struct INode{
-    enum Mode mode;
     uint nLinks;
     uint size;
     uint blocks[10];
