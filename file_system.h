@@ -5,27 +5,26 @@
 #ifndef FILESYSTEM_FILE_SYSTEM_H
 #define FILESYSTEM_FILE_SYSTEM_H
 
-#include <string.h>
 #include <stdbool.h>
 
+void create_file_system(char* path, int size);
 
-void initializeFileSystem(const char* filename, uint size);
+void connect_file_system(char* path);
 
-void clearFileSystem();
+bool create_directory(char* path);
 
-int ls(const char* path, char** result);
+bool create_file(char* path);
 
-int mkdir(const char* path);
+bool remove_directory(char* path);
 
-int mkfile(const char* path);
+bool remove_file(char* path);
 
-int rmdir(const char* path);
+bool read(char* path, char* content);
 
-int rmfile(const char* path);
+bool write(char* path, const char* content);
 
-int read(const char* path, char* content);
+bool ls(char* path, char** result);
 
-int write(const char* path, char* content);
-
+bool dispose();
 
 #endif //FILESYSTEM_FILE_SYSTEM_H
