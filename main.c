@@ -1,87 +1,81 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <stdbool.h>
+#include <string.h>
 
-#include "file_system.h"
-#include "command.h"
 
-#define STORAGE_SIZE 1048576
-#define CONTENT_SIZE 1024
-#define MAX_FILE_COUNT 255
-#define MAX_NAME_LENGTH 255
+#define MAX_COMMAND_LENGTH 10
+#define MAX_PATH_LENGTH 100
+
+
+void connect_file_system(char* path) {
+
+}
+
+bool file_exist(char* path) {
+    struct stat buffer;
+    int exist = stat(path,&buffer);
+    if(exist == 0)
+        return true;
+    else
+        return false;
+}
+
+void create_file_system(char* path, int size){
+
+}
 
 
 int main(int argc, char** argv) {
+    if (argc != 2 && argc != 3) {
+        printf("usage for existent file system:\n\t./file_system path\n");
+        printf("usage for nonexistent file system:\n\t./file_system path size\n");
+        return EXIT_SUCCESS;
+    }
+    bool exist_mode = argc == 2;
 
-    char* filename = "file_system_storage";
-    int size = STORAGE_SIZE;
+    char* path = argv[1];
+    int size = atoi(argv[2]);
 
-    initializeFileSystem(filename, size);
-    char* command = malloc(MAX_NAME_LENGTH * sizeof(char));
-    char* content = malloc(CONTENT_SIZE * sizeof(char));
-    char** lsResult = malloc(MAX_FILE_COUNT * sizeof(char));;
-    enum Command  cmd;
-    /*
-    do {
+    if (file_exist(path) && !exist_mode || !file_exist(path) && exist_mode) {
+        return EXIT_FAILURE;
+    }
+    if (!exist_mode){
+        create_file_system(path, size);
+    }
+    connect_file_system(path);
+
+    char* command = malloc(MAX_COMMAND_LENGTH * sizeof(char));
+    char* command_path = malloc(MAX_PATH_LENGTH * sizeof(char));
+
+    while(true) {
         scanf("%s", command);
-        cmd = convertStringToCommand(command);
-        switch (cmd){
-            case MKDIR:
-                scanf("%s", command);
-                if(!mkdir(command)){
-                    printf("%s\n", "cannot create directory");
-                }
-                break;
-            case MKFILE:
-                scanf("%s", command);
-                if(!mkfile(command)){
-                    printf("%s\n", "cannot create file");
-                }
-                break;
-            case RMDIR:
-                scanf("%s", command);
-                if(!rmdir(command)){
-                    printf("%s\n", "cannot remove directory");
-                }
-                break;
-            case RMFILE:
-                scanf("%s", command);
-                if(!rmfile(command)){
-                    printf("%s\n", "cannot remove file");
-                }
-                break;
-            case READ:
-                scanf("%s", command);
-                if(!read(command, content)){
-                    printf("%s\n", "cannot read file");
-                } else {
-                    printf("%s\n", content);
-                }
-                break;
-            case WRITE:
-                scanf("%s", command);
-                if(!write(command, content)){
-                    printf("%s\n", "cannot write to file");
-                }
-                break;
-            case LS:
-                scanf("%s", command);
-                if(!ls(command, lsResult)){
-                    printf("%s\n", "cannot do ls command");
-                } else {
-                    for (int i=0; i< MAX_FILE_COUNT && lsResult[i][0] != '\0'; ++i) {
-                        printf("%s\n", lsResult[i]);
-                    }
-                }
-                break;
-            case UNKNOWN:
-                printf("%s %s\n", "unknown command", argv[1]);
-                break;
-            default:
-                break;
+        if (!strcmp(command, "mkdir")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("cannot create directory\n");
+        } else if (!strcmp(command, "mkfile")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("cannot create file\n");
+        } else if (!strcmp(command, "rmdir")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("cannot remove directory\n");
+        } else if (!strcmp(command, "rmfile")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("cannot remove file\n");
+        } else if (!strcmp(command, "read")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("cannot read from file\n");
+        } else if (!strcmp(command, "write")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("cannot write to file\n");
+        } else if (!strcmp(command, "ls")) {
+            scanf("%s", command_path);
+            if(!mkdir(command_path)) printf("no such file or directory\n");
+        } else if (!strcmp(command, "exit")) {
+            printf("Exit.....\n");
+            break;
         }
-    } while (cmd != EXIT);
-*/
-    clearFileSystem();
-
+    }
     return EXIT_SUCCESS;
 }
