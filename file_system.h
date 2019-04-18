@@ -10,7 +10,7 @@
 
 #include "inode.h"
 
-#define MAX_FILE_NAME_LENGTH 2048
+#define MAX_FILE_NAME_LENGTH 255
 
 
 void create_file_system(char* path, int size);
