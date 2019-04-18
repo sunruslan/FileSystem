@@ -4,16 +4,24 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "helpers.c"
 #include "file_system.h"
 
 #define MAX_COMMAND_LENGTH 10
 #define MAX_PATH_LENGTH 100
 #define MAX_CONTENT_LENGTH 1024
-#define 
 
+
+bool file_exist(char* path) {
+    struct stat buffer;
+    int exist = stat(path, &buffer);
+    if(exist == 0)
+        return true;
+    else
+        return false;
+}
 
 int main(int argc, char** argv) {
+
     if (argc != 2 && argc != 3) {
         printf("usage for existent file system:\n\t./file_system path\n");
         printf("usage for nonexistent file system:\n\t./file_system path size\n");
@@ -36,7 +44,7 @@ int main(int argc, char** argv) {
     char* command_path = malloc(MAX_PATH_LENGTH * sizeof(char));
     char* content = malloc(MAX_CONTENT_LENGTH * sizeof(char));
     char** ls_results;
-    
+
     while(true) {
         scanf("%s", command);
         if (!strcmp(command, "mkdir")) {
@@ -56,7 +64,7 @@ int main(int argc, char** argv) {
             if(!read(command_path, content)){
                 printf("cannot read from file\n");
                 continue;
-            } 
+            }
             printf(content);
         } else if (!strcmp(command, "write")) {
             scanf("%s", command_path);

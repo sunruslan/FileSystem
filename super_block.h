@@ -10,6 +10,8 @@ struct SuperBlock{
     uint inode_count;
     uint block_size;
     uint inode_size;
+    uint free_block;
+    uint free_inode;
 };
 
 #endif //FILESYSTEM_SUPERBLOCK_H

@@ -9,22 +9,27 @@
 #include "file_system.h"
 #include "super_block.h"
 
+#define BLOCK_SIZE 512
+
 struct FileSystem{
     FILE* file;
-    struct SuperBlock superBlock;
+    struct SuperBlock* superBlock;
     uint* freeBlocks;
     uint* freeINodes;
-    uint nextFreeBlock;
-    uint nextFreeINode;
-} file_system;
+};
+
+struct FileSystem *file_system;
 
 
 void create_file_system(char* path, int size){
-
+    file_system = malloc(sizeof(struct FileSystem));
+    connect_file_system(path);
+    file_system->superBlock =
+    dispose();
 }
 
 void connect_file_system(char* path){
-    file_system.file = fopen(path, "w+b");
+    file_system->file = fopen(path, "w+b");
 }
 
 bool create_directory(char* path){
@@ -56,5 +61,5 @@ bool ls(char* path, char** result){
 }
 
 bool dispose(){
-    fclose(file_system.file);
+    fclose(file_system->file);
 }
