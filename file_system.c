@@ -34,12 +34,12 @@ void create_file_system(char* path, int size){
     for (int j = 0; j < superBlock->inodes_count; ++j) {
         superBlock->free_inodes[j] = j + 1 >= superBlock->inodes_count ? -1 : j + 1;
     }
-    fprintf(file_system, "%d",superBlock->blocks_count);
-    fprintf(file_system, "%d",superBlock->block_size);
-    fprintf(file_system, "%d",superBlock->inode_size);
-    fprintf(file_system, "%d",superBlock->inodes_count);
-    fprintf(file_system, "%d",superBlock->free_inodes_count);
-    fprintf(file_system, "%d",superBlock->free_inodes_count);
+    fwrite((const void*)&superBlock->blocks_count, sizeof(int), 1, file_system);
+    fwrite((const void*)&superBlock->block_size, sizeof(int), 1, file_system);
+    fwrite((const void*)&superBlock->inodes_count, sizeof(int), 1, file_system);
+    fwrite((const void*)&superBlock->inode_size, sizeof(int), 1, file_system);
+    fwrite((const void*)&superBlock->free_blocks_count, sizeof(int), 1, file_system);
+    fwrite((const void*)&superBlock->free_inodes_count, sizeof(int), 1, file_system);
     fwrite(superBlock->free_blocks, sizeof(int), superBlock->blocks_count, file_system);
     fwrite(superBlock->free_inodes, sizeof(int), superBlock->inodes_count, file_system);
     dispose();
@@ -48,7 +48,14 @@ void create_file_system(char* path, int size){
 void connect_file_system(char* path) {
     file_system = fopen(path, "r+b");
     superBlock = malloc(sizeof(struct SuperBlockStruct));
-    fread()
+    fread(&superBlock->blocks_count, sizeof(int), 1, file_system);
+    fread(&superBlock->block_size, sizeof(int), 1, file_system);
+    fread(&superBlock->inodes_count, sizeof(int), 1, file_system);
+    fread(&superBlock->inode_size, sizeof(int), 1, file_system);
+    fread(&superBlock->free_blocks_count, sizeof(int), 1, file_system);
+    fread(&superBlock->free_inodes_count, sizeof(int), 1, file_system);
+    fread(superBlock->free_blocks, sizeof(int), superBlock->blocks_count, file_system);
+    fread(superBlock->free_inodes, sizeof(int), superBlock->inodes_count, file_system);
 }
 
 bool create_directory(char* path){
