@@ -7,9 +7,15 @@
 
 #include "file_system.h"
 
-struct File{
+#define MAX_FILE_NAME_LENGTH 255
+#define FILE_SIZE 259
+
+
+struct FileStruct{
     int inode_index;
-    char* name[MAX_FILE_NAME_LENGTH];
-};
+    char name[MAX_FILE_NAME_LENGTH];
+} FileStruct;
+
+typedef struct FileStruct* File;
 
 #endif //FILESYSTEM_FILE_H

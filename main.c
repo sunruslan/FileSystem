@@ -6,6 +6,7 @@
 
 #include "file_system.h"
 #include "inode.h"
+#include "file.h"
 
 #define MAX_COMMAND_LENGTH 10
 #define MAX_PATH_LENGTH 100
@@ -22,9 +23,6 @@ bool file_exist(char* path) {
 }
 
 int main(int argc, char** argv) {
-    INode inode;
-    printf("%d", sizeof(inode->blocks));
-    /*
     if (argc != 2 && argc != 3) {
         printf("usage for existent file system:\n\t./file_system path\n");
         printf("usage for nonexistent file system:\n\t./file_system path size\n");
@@ -35,7 +33,7 @@ int main(int argc, char** argv) {
     char* path = argv[1];
     uint size = atoi(argv[2]);
 
-    if (file_exist(path) && !exist_mode || !file_exist(path) && exist_mode) {
+    if (!file_exist(path) && exist_mode) {
         return EXIT_FAILURE;
     }
     if (!exist_mode){
@@ -83,14 +81,12 @@ int main(int argc, char** argv) {
         }
     }
 
-    free(path);
     free(command);
     free(command_path);
     free(content);
-    for (int i = 0; i < sizeof(ls_results)/ sizeof(char*); ++i) {
+    for (int i = 0; i < sizeof(ls_results)/ sizeof(char*) && ls_results != NULL; ++i) {
         if (ls_results[i] != NULL) free(ls_results[i]);
     }
     if (ls_results != NULL) free(ls_results);
-     */
     return EXIT_SUCCESS;
 }
