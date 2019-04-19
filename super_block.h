@@ -5,13 +5,23 @@
 #ifndef FILESYSTEM_SUPERBLOCK_H
 #define FILESYSTEM_SUPERBLOCK_H
 
-struct SuperBlock{
-    uint blocks_count;
-    uint inode_count;
-    uint block_size;
-    uint inode_size;
-    uint free_block;
-    uint free_inode;
-};
+#define MAX_BLOCKS_COUNT 1024
+#define MAX_INODES_COUNT 1024
+#define BLOCK_SIZE 8216
+
+struct SuperBlockStruct{
+    int blocks_count;
+    int inodes_count;
+    int block_size;
+    int inode_size;
+    int* free_blocks;
+    int* free_inodes;
+    int free_blocks_count;
+    int free_inodes_count;
+} SuperBlockStruct;
+
+typedef struct SuperBlockStruct* SuperBlock;
+
+
 
 #endif //FILESYSTEM_SUPERBLOCK_H
