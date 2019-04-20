@@ -27,7 +27,7 @@ bool read(char* path, char* content);
 
 bool write(char* path, const char* content);
 
-bool ls(char* path, char** result);
+int ls(char* path, char*** result);
 
 bool dispose();
 

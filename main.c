@@ -73,7 +73,11 @@ int main(int argc, char** argv) {
             if(!write(command_path, content)) printf("cannot write to file\n");
         } else if (!strcmp(command, "ls")) {
             scanf("%s", command_path);
-            if(!ls(command_path, ls_results)) printf("no such file or directory\n");
+            int count;
+            if((count = ls(command_path, &ls_results)) == 0) printf("no such file or directory\n");
+            for (int i = 0; i < count; ++i) {
+                printf("%s\n", ls_results[i]);
+            }
         } else if (!strcmp(command, "exit")) {
             dispose();
             printf("Exit.....\n");

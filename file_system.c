@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <sys/param.h>
+#include <libgen.h>
 
 #include "file_system.h"
 #include "super_block.h"
@@ -56,17 +57,11 @@ void create_file_system(char* path, int size){
         root_inode->blocks[i] = -1;
     }
     root_inode->blocks[0] = 3;
-    root_inode->single_indirect_block = -1;
-    root_inode->double_indirect_block = -1;
-    root_inode->triple_indirect_block = -1;
-    root_inode->files_inside = 0;
-    root_inode->size = sizeof(struct FileStruct);
+    root_inode->files_inside = 1;
+    root_inode->size = FILE_SIZE;
     root_inode->index = 0;
     fwrite((const void*)&root_inode->size, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->files_inside, sizeof(int), 1, file_system);
-    fwrite((const void*)&root_inode->single_indirect_block, sizeof(int), 1, file_system);
-    fwrite((const void*)&root_inode->double_indirect_block, sizeof(int), 1, file_system);
-    fwrite((const void*)&root_inode->triple_indirect_block, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->blocks, sizeof(int), 10, file_system);
     fwrite((const void*)&root_inode->index, sizeof(int), 1, file_system);
     fseek(file_system, BLOCK_SIZE * file_system_blocks, SEEK_SET);
@@ -91,68 +86,100 @@ void connect_file_system(char* path) {
     fread(superBlock->free_inodes, sizeof(int), superBlock->inodes_count, file_system);
 }
 
+int get_free_block_index() {
+    assert(superBlock != NULL && superBlock->free_blocks != NULL);
+    for (int i = 0; i < superBlock->blocks_count; ++i) {
+        if (superBlock->free_blocks[i] > 0) return i;
+    }
+    return -1;
+}
+
+int occupy_block(int index){
+    assert(index >= 0 && index < superBlock->blocks_count);
+    assert(superBlock->free_blocks[index] == index);
+    superBlock->free_blocks[index] = -1;
+    superBlock->free_blocks_count -= 1;
+}
+
+int get_free_inode_index() {
+    assert(superBlock != NULL && superBlock->free_inodes != NULL);
+    for (int i = 0; i < superBlock->inodes_count; ++i) {
+        if (superBlock->free_inodes[i] > 0) return i;
+    }
+    return -1;
+}
+
+int occupy_inode(int index) {
+    assert(index >= 0 && index < superBlock->inodes_count);
+    assert(superBlock->free_inodes[index] == index);
+    superBlock->free_inodes[index] = -1;
+    superBlock->free_inodes_count -=1;
+}
+
+
 bool create_directory(char* path){
-    char* name;
-    char* dir_path;
-    INode dir_inode = get_inode(dir_path);
+    char name[MAX_FILE_NAME_LENGTH];
+    strcpy(name, basename(path));
+    int path_len = strlen(path);
+    char* dir_path = malloc(sizeof(char) * path_len);
+    strncpy(dir_path, path, path_len - strlen(name) -1);
+    INode dir_inode = get_inode(file_system, dir_path);
     if (dir_inode == NULL) return false;
-    if (file_exist(dir_inode, name)) return false;
+    if (file_exist_by_inode(file_system, dir_inode, name)) return false;
 
     INode inode = malloc(sizeof(struct INodeStruct));
-    inode->triple_indirect_block = -1;
-    inode->double_indirect_block = -1;
-    inode->single_indirect_block = -1;
-    inode->size = sizeof(struct FileStruct);
-    inode->blocks[0] = get_free_block_index();
+    inode->size = 2 * FILE_SIZE;
+    if ((inode->blocks[0] = get_free_block_index()) == -1) return false;
+    occupy_block(inode->blocks[0]);
     for (int i = 1; i < 10; ++i) {
         inode->blocks[i] = -1;
     }
-    inode->files_inside = 0;
+    inode->files_inside = 2;
+    write_inode(file_system, dir_inode);
+    if ((inode->index = get_free_inode_index()) == -1) return false;
+    occupy_inode(inode->index);
 
     File file = malloc(sizeof(struct FileStruct));
+
     strcpy(file->name, ".");
     file->inode_index = inode->index;
-    //TODO: запись файла в блок новой директории
+    fseek(file_system, inode->blocks[0] * BLOCK_SIZE, SEEK_SET);
+    fwrite(file, FILE_SIZE, 1, file_system);
     strcpy(file->name, "..");
     file->inode_index = dir_inode->index;
-    //TODO: запись файла в блок новой директории
+    fwrite(file, FILE_SIZE, 1, file_system);
 
     dir_inode->files_inside += 1;
-    dir_inode->size += inode->size;
-    file = malloc(sizeof(struct FileStruct));
+    dir_inode->size += FILE_SIZE;
+    write_inode(file_system, dir_inode);
     strcpy(file->name, name);
     file->inode_index = inode->index;
-    //TODO: запись файла в блок директории выше
-
+    write_to_inode_block(file_system, dir_inode, file, FILE_SIZE);
     return true;
 }
 
 bool create_file(char* path){
-    char* name;
-    char* dir_path;
-    INode dir_inode = get_inode(dir_path);
-    if (dir_inode == NULL) return false;
-    if (file_exist(dir_inode, name)) return false;
-
-    INode inode = malloc(sizeof(struct INodeStruct));
-    inode->triple_indirect_block = -1;
-    inode->double_indirect_block = -1;
-    inode->single_indirect_block = -1;
-    inode->size = sizeof(struct FileStruct);
-    inode->blocks[0] = get_free_block_index();
-    for (int i = 1; i < 10; ++i) {
-        inode->blocks[i] = -1;
-    }
-    inode->files_inside = 0;
-
-    dir_inode->files_inside += 1;
-    dir_inode->size += inode->size;
-    File file = malloc(sizeof(struct FileStruct));
-    strcpy(file->name, ".");
-    file->inode_index = inode->index;
-    //TODO: запись файла в блок директории выше
-
-    return true;
+//    char* name;
+//    char* dir_path;
+//    INode dir_inode = get_inode(dir_path);
+//    if (dir_inode == NULL) return false;
+//    if (file_exist_by_inode(dir_inode, name)) return false;
+//
+//    INode inode = malloc(sizeof(struct INodeStruct));
+//    inode->size = sizeof(struct FileStruct);
+//    inode->blocks[0] = get_free_block_index();
+//    for (int i = 1; i < 10; ++i) {
+//        inode->blocks[i] = -1;
+//    }
+//    inode->files_inside = 0;
+//
+//    dir_inode->files_inside += 1;
+//    dir_inode->size += inode->size;
+//    File file = malloc(sizeof(struct FileStruct));
+//    strcpy(file->name, ".");
+//    file->inode_index = inode->index;
+//    write_to_inode_block(dir_inode, file);
+//    return true;
 }
 
 bool remove_directory(char* path){
@@ -164,33 +191,50 @@ bool remove_file(char* path){
 }
 
 bool read(char* path, char* content){
-    char* name;
-    char* dir_path;
-    INode dir_inode = get_inode(dir_path);
-    if (inode == NULL) return false;
-    if (!file_exist(dir_inode, name)) return false;
-
-    INode inode = get_inode(path);
-    int cur = 0;
-    int i = 0;
-    while (cur < inode->size) {
-        if (inode->blocks[i] == -1) return false;
-        fseek(file_system, inode->blocks, SEEK_SET);
-        fread(content + cur, MIN(inode->size, BLOCK_SIZE), 1, file_system);
-        cur += MIN(inode->size, BLOCK_SIZE);
-    }
-    content[inode->size] = '\0';
-    return true;
+//    char* name;
+//    char* dir_path;
+//    INode dir_inode = get_inode(dir_path);
+//    if (dir_inode == NULL) return false;
+//    if (!file_exist_by_inode(dir_inode, name)) return false;
+//
+//    INode inode = get_inode(path);
+//    int cur = 0;
+//    int i = 0;
+//    while (cur < inode->size) {
+//        if (inode->blocks[i] == -1) return false;
+//        fseek(file_system, inode->blocks, SEEK_SET);
+//        fread(content + cur, MIN(inode->size, BLOCK_SIZE), 1, file_system);
+//        cur += MIN(inode->size, BLOCK_SIZE);
+//    }
+//    content[inode->size] = '\0';
+//    return true;
 }
 
 bool write(char* path, const char* content){
 
 }
 
-bool ls(char* path, char** result){
-    INode inode;
-    fseek(file_system, sizeof())
-    fread(inode, )
+int ls(char* path, char*** result){
+    if (!strcmp(path, "/")) strcpy(path, "");
+    INode inode = get_inode(file_system, path);
+    if (inode == NULL || inode->files_inside == 0) return false;
+    *result = malloc(sizeof(char*) * inode->files_inside);
+    int block = 0;
+    fseek(file_system, inode->blocks[block] * BLOCK_SIZE, SEEK_SET);
+    File file = malloc(sizeof(struct FileStruct));
+    int count = 0;
+    for (int i = 0; i < inode->files_inside; ++i) {
+        if ((i + 1) * FILE_SIZE > BLOCK_SIZE * (block + 1)) {
+            ++block;
+            fseek(file_system, inode->blocks[block] * BLOCK_SIZE, SEEK_SET);
+            continue;
+        }
+        fread(file, FILE_SIZE, 1, file_system);
+        (*result)[i] = malloc(MAX_FILE_NAME_LENGTH * sizeof(char));
+        strcpy((*result)[i], file->name);
+        ++count;
+    }
+    return count;
 }
 
 bool dispose(){

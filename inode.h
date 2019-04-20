@@ -8,31 +8,24 @@
 #include <sys/types.h>
 #include <bits/types/FILE.h>
 
-#define INODE_SIZE 64
+#define INODE_SIZE 52
 
 
 struct INodeStruct{
     int size;
-    int blocks[10];
-    int single_indirect_block;
-    int double_indirect_block;
-    int triple_indirect_block;
     int files_inside;
+    int blocks[10];
     int index;
 } INodeStruct;
 
 typedef struct INodeStruct* INode;
 
-void setGap(int);
+INode get_inode(FILE* file_system, const char* path);
 
-struct INode* getINode(int, FILE*);
+void write_to_inode_block(FILE* file_system, INode inode, const void* content, int size);
 
-void setINode(int, struct INode*, FILE*);
+INode get_inode_by_index(FILE* file_system, int index);
 
-void freeINode(int);
-
-void newNode();
-
-void addData(struct INode*, void* data);
+void write_inode(FILE* file_system, INode inode);
 
 #endif //FILESYSTEM_INODE_H
