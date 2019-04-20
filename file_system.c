@@ -12,6 +12,8 @@
 #include "inode.h"
 #include "file.h"
 
+#define MAX_CONTENT_LENGTH 1024*1024
+
 
 SuperBlock superBlock;
 FILE *file_system;
@@ -58,13 +60,15 @@ void create_file_system(char* path, int size){
     root_inode->double_indirect_block = -1;
     root_inode->triple_indirect_block = -1;
     root_inode->files_inside = 0;
-    root_inode->size = sizeof(struct INodeStruct);
+    root_inode->size = sizeof(struct FileStruct);
+    root_inode->index = 0;
     fwrite((const void*)&root_inode->size, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->files_inside, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->single_indirect_block, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->double_indirect_block, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->triple_indirect_block, sizeof(int), 1, file_system);
     fwrite((const void*)&root_inode->blocks, sizeof(int), 10, file_system);
+    fwrite((const void*)&root_inode->index, sizeof(int), 1, file_system);
     fseek(file_system, BLOCK_SIZE * file_system_blocks, SEEK_SET);
     fwrite((const void*)&root->inode_index, sizeof(int), 1, file_system);
     fwrite(root->name, sizeof(char), MAX_FILE_NAME_LENGTH, file_system);
@@ -88,11 +92,67 @@ void connect_file_system(char* path) {
 }
 
 bool create_directory(char* path){
+    char* name;
+    char* dir_path;
+    INode dir_inode = get_inode(dir_path);
+    if (dir_inode == NULL) return false;
+    if (file_exist(dir_inode, name)) return false;
 
+    INode inode = malloc(sizeof(struct INodeStruct));
+    inode->triple_indirect_block = -1;
+    inode->double_indirect_block = -1;
+    inode->single_indirect_block = -1;
+    inode->size = sizeof(struct FileStruct);
+    inode->blocks[0] = get_free_block_index();
+    for (int i = 1; i < 10; ++i) {
+        inode->blocks[i] = -1;
+    }
+    inode->files_inside = 0;
+
+    File file = malloc(sizeof(struct FileStruct));
+    strcpy(file->name, ".");
+    file->inode_index = inode->index;
+    //TODO: запись файла в блок новой директории
+    strcpy(file->name, "..");
+    file->inode_index = dir_inode->index;
+    //TODO: запись файла в блок новой директории
+
+    dir_inode->files_inside += 1;
+    dir_inode->size += inode->size;
+    file = malloc(sizeof(struct FileStruct));
+    strcpy(file->name, name);
+    file->inode_index = inode->index;
+    //TODO: запись файла в блок директории выше
+
+    return true;
 }
 
 bool create_file(char* path){
+    char* name;
+    char* dir_path;
+    INode dir_inode = get_inode(dir_path);
+    if (dir_inode == NULL) return false;
+    if (file_exist(dir_inode, name)) return false;
 
+    INode inode = malloc(sizeof(struct INodeStruct));
+    inode->triple_indirect_block = -1;
+    inode->double_indirect_block = -1;
+    inode->single_indirect_block = -1;
+    inode->size = sizeof(struct FileStruct);
+    inode->blocks[0] = get_free_block_index();
+    for (int i = 1; i < 10; ++i) {
+        inode->blocks[i] = -1;
+    }
+    inode->files_inside = 0;
+
+    dir_inode->files_inside += 1;
+    dir_inode->size += inode->size;
+    File file = malloc(sizeof(struct FileStruct));
+    strcpy(file->name, ".");
+    file->inode_index = inode->index;
+    //TODO: запись файла в блок директории выше
+
+    return true;
 }
 
 bool remove_directory(char* path){
@@ -104,7 +164,23 @@ bool remove_file(char* path){
 }
 
 bool read(char* path, char* content){
+    char* name;
+    char* dir_path;
+    INode dir_inode = get_inode(dir_path);
+    if (inode == NULL) return false;
+    if (!file_exist(dir_inode, name)) return false;
 
+    INode inode = get_inode(path);
+    int cur = 0;
+    int i = 0;
+    while (cur < inode->size) {
+        if (inode->blocks[i] == -1) return false;
+        fseek(file_system, inode->blocks, SEEK_SET);
+        fread(content + cur, MIN(inode->size, BLOCK_SIZE), 1, file_system);
+        cur += MIN(inode->size, BLOCK_SIZE);
+    }
+    content[inode->size] = '\0';
+    return true;
 }
 
 bool write(char* path, const char* content){
@@ -112,7 +188,9 @@ bool write(char* path, const char* content){
 }
 
 bool ls(char* path, char** result){
-
+    INode inode;
+    fseek(file_system, sizeof())
+    fread(inode, )
 }
 
 bool dispose(){

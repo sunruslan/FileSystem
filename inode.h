@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <bits/types/FILE.h>
 
-#define INODE_SIZE 60
+#define INODE_SIZE 64
 
 
 struct INodeStruct{
@@ -18,6 +18,7 @@ struct INodeStruct{
     int double_indirect_block;
     int triple_indirect_block;
     int files_inside;
+    int index;
 } INodeStruct;
 
 typedef struct INodeStruct* INode;
